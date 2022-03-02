@@ -38,7 +38,7 @@ foreach ($domain in $UCS) {
     # try to connect to the UCS
     try {
         Write-Verbose "Attempting to connect to the UCS Domain $($domain)"
-        $UCSObj = Connect-Ucs -Name $domain
+        $UCSObj = Connect-Ucs -Name $domain -Credential $Credentials
         Write-Host "Connected to $($UCSObj.Ucs)."
     }
     catch {
