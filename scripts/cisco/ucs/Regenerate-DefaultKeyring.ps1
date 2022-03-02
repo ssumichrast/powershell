@@ -24,7 +24,7 @@ param(
     [Parameter(Mandatory = $true)]
     [string[]]
     $UCS,
-    [SecureString] $Credentials
+    [System.Management.Automation.PSCredential] $Credentials
 )
 
 if (!$Credentials) {
