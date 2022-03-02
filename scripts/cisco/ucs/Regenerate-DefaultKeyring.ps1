@@ -22,31 +22,40 @@
 param(
     # FQDN of the UCS Domain to regenerate the default keyring certificate on
     [Parameter(Mandatory = $true)]
-    [string]
-    $UCS
+    [string[]]
+    $UCS,
+    [SecureString] $Credentials
 )
 
-# try to connect to the UCS
-
-try {
-    Write-Verbose "Attempting to connect to the UCS Domain $($UCS)"
-    $UCSObj = Connect-Ucs -Name $UCS
-    Write-Host "Connected to $($UCSObj.Ucs)."
-}
-catch {
-    Write-Error "Failed to connect to UCS Manager"
-    exit
+if (!$Credentials) {
+    # Obtain login credentials
+    $Credentials = Get-Credential -Message "Enter UCSM Login Information"
 }
 
-# Find the keyring and regenerate it
-try {
-    Write-Verbose "Attempting to trigger a regenerate task"
-    Get-UcsKeyRing -Name default -Ucs $UCSObj | Set-UcsKeyRing -Regen true -force | Out-Null
-    Write-Host "$($UCSObj.Ucs): Default Keyring Certificate regeneration successful"
-}
-catch {
-    Write-Error "Failed to trigger a certificate regeneration."
-}
+# Connect to the domain(s) and regenerate certificates
 
-# Disconnect from UCS Manager
-Disconnect-Ucs -Ucs $UCSObj | Out-Null
+foreach ($domain in $UCS) { 
+    # try to connect to the UCS
+    try {
+        Write-Verbose "Attempting to connect to the UCS Domain $($domain)"
+        $UCSObj = Connect-Ucs -Name $domain
+        Write-Host "Connected to $($UCSObj.Ucs)."
+    }
+    catch {
+        Write-Error "Failed to connect to UCS Manager"
+        exit
+    }
+
+    # Find the keyring and regenerate it
+    try {
+        Write-Verbose "Attempting to trigger a regenerate task"
+        Get-UcsKeyRing -Name default -Ucs $UCSObj | Set-UcsKeyRing -Regen true -force | Out-Null
+        Write-Host "$($UCSObj.Ucs): Default Keyring Certificate regeneration successful"
+    }
+    catch {
+        Write-Error "Failed to trigger a certificate regeneration."
+    }
+
+    # Disconnect from UCS Manager
+    Disconnect-Ucs -Ucs $UCSObj | Out-Null
+}
